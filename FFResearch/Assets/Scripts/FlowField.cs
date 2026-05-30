@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace FlowFieldResearch
@@ -70,9 +71,10 @@ namespace FlowFieldResearch
         }
 
         /// <summary>
-        /// Dijkstra flood-fill from the goal. Every reachable cell ends up storing
-        /// the cheapest total cost to get there. Uses 4-connectivity so the field
-        /// can never "leak" diagonally through a wall corner.
+        /// Dijkstra flood-fill from the goal using a real priority queue: the cell
+        /// with the lowest integration cost is always expanded next. Every reachable
+        /// cell ends up storing the cheapest total cost to get there. 4-connectivity
+        /// so the field can never "leak" diagonally through a wall corner.
         /// </summary>
         public void CreateIntegrationField(FlowFieldCell destination)
         {
@@ -81,29 +83,33 @@ namespace FlowFieldResearch
             foreach (FlowFieldCell cell in Cells)
                 cell.BestCost = ushort.MaxValue;
 
-            // Only seed the integration value. Do NOT touch destination.Cost: the
-            // traversal cost belongs to the baked-once cost field, and zeroing it
-            // permanently corrupts the field for future goals and leaves the old
-            // goal cell tied with its neighbour, so it loses its flow arrow.
+            // Only seed the integration value. Do NOT touch destination.Cost: that
+            // traversal cost belongs to the baked-once cost field.
             destination.BestCost = 0;
 
-            var open = new Queue<FlowFieldCell>();
-            open.Enqueue(destination);
+            var open = new MinHeap();
+            open.Push(destination, 0);
 
             while (open.Count > 0)
             {
-                FlowFieldCell current = open.Dequeue();
+                open.Pop(out FlowFieldCell current, out ushort priority);
+
+                // Lazy deletion: a cheaper route to `current` was queued after this
+                // entry, so this one is stale — skip it.
+                if (priority > current.BestCost)
+                    continue;
 
                 foreach (FlowFieldCell neighbour in GetNeighbours(current.GridIndex, GridDirection.CardinalDirections))
                 {
                     if (neighbour.Cost == FlowFieldCell.ImpassableCost)
                         continue;
 
-                    ushort tentative = (ushort)(neighbour.Cost + current.BestCost);
+                    // Computed as int so the sum can't wrap a ushort mid-calculation.
+                    int tentative = current.BestCost + neighbour.Cost;
                     if (tentative < neighbour.BestCost)
                     {
-                        neighbour.BestCost = tentative;
-                        open.Enqueue(neighbour); // re-queue: a cheaper route was found
+                        neighbour.BestCost = (ushort)tentative;
+                        open.Push(neighbour, neighbour.BestCost);
                     }
                 }
             }
@@ -173,6 +179,62 @@ namespace FlowFieldResearch
                 Vector2Int n = index + dir;
                 if (InBounds(n))
                     yield return Cells[n.x, n.y];
+            }
+        }
+
+        /// <summary>
+        /// Tiny binary min-heap keyed on integration cost. Specialised to
+        /// (cell, cost) so the Dijkstra pass has a real priority queue without
+        /// depending on System.Collections.Generic.PriorityQueue, which isn't
+        /// guaranteed across Unity's API-compatibility levels.
+        /// </summary>
+        private sealed class MinHeap
+        {
+            private readonly List<(FlowFieldCell cell, ushort cost)> _items =
+                new List<(FlowFieldCell, ushort)>();
+
+            public int Count => _items.Count;
+
+            public void Push(FlowFieldCell cell, ushort cost)
+            {
+                _items.Add((cell, cost));
+
+                // Sift up.
+                int i = _items.Count - 1;
+                while (i > 0)
+                {
+                    int parent = (i - 1) / 2;
+                    if (_items[parent].cost <= _items[i].cost) break;
+                    (_items[parent], _items[i]) = (_items[i], _items[parent]);
+                    i = parent;
+                }
+            }
+
+            public void Pop(out FlowFieldCell cell, out ushort cost)
+            {
+                cell = _items[0].cell;
+                cost = _items[0].cost;
+
+                // Move the last item to the root, then sift down.
+                int last = _items.Count - 1;
+                _items[0] = _items[last];
+                _items.RemoveAt(last);
+
+                int n = _items.Count;
+                int i = 0;
+                while (true)
+                {
+                    int left = 2 * i + 1;
+                    int right = 2 * i + 2;
+                    int smallest = i;
+
+                    if (left < n && _items[left].cost < _items[smallest].cost) smallest = left;
+                    if (right < n && _items[right].cost < _items[smallest].cost) smallest = right;
+                    if (smallest == i) break;
+
+                    (_items[smallest], _items[i]) = (_items[i], _items[smallest]);
+                    i = smallest;
+                }
             }
         }
     }
