@@ -83,5 +83,12 @@ namespace FlowFieldResearch
             if (Field?.Destination == null) return false;
             return Field.GetCellFromWorldPosition(worldPosition) == Field.Destination;
         }
+
+        /// <summary>True if the world position maps to a non-wall cell.</summary>
+        public bool IsWalkable(Vector2 worldPosition)
+        {
+            if (Field == null) return false;
+            return Field.GetCellFromWorldPosition(worldPosition).Cost != FlowFieldCell.ImpassableCost;
+        }
     }
 }
