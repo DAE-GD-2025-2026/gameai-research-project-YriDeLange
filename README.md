@@ -4,7 +4,7 @@ An implementation of grid-based flow field pathfinding in Unity. It computes a s
 direction field over a grid and lets any number of agents follow it toward a common
 goal, routing around walls and around (but not necessarily through) costly terrain.
 
-![Flow field result: a 20×20 grid with cyan flow arrows in every passable cell, a red impassable wall the arrows avoid, an orange rough-terrain patch whose interior arrows point back out toward the cheapest exit, and a white goal marker in the top-right corner.](Images/FlowFieldResult.png)
+![Flow field result: a 20×20 grid with cyan flow arrows in every passable cell, a red impassable wall the arrows avoid, an orange rough-terrain patch whose interior arrows point back out toward the cheapest exit, and an empty cell in the centre as the goal.](Images/FlowFieldResult.png)
 
 ---
 
@@ -26,7 +26,7 @@ this pays off.
 
 The system is a three-stage field-building pipeline plus an agent layer that follows
 the result. The terminology (cost field → integration field → flow field) follows
-Emerson's "flow field tiles" formulation
+Emerson's "flow field tiles" formulation.
 
 ### Project structure
 
@@ -153,7 +153,8 @@ and a per-agent search like A* will be cheaper.
    pp. 67–76, DOI: 10.1201/9780429055096-7.)
 
 2. Dijkstra, E. W. (1959). A Note on Two Problems in Connexion with Graphs.
-   Numerische Mathematik, 1, 269–271. DOI: 10.1007/BF01386390.
+   Numerische Mathematik, 1, 269–271. DOI: 10.1007/BF01386390. Free PDF:
+   <https://ir.cwi.nl/pub/9256/9256D.pdf>
 
 3. Patel, A. Red Blob Games. Introduction to A\* (covers Breadth-First Search,
    Dijkstra's Algorithm, distance maps and flow fields):
@@ -166,4 +167,5 @@ and a per-agent search like A* will be cheaper.
    Group. Free article: <https://www.red3d.com/cwr/steer/>
 
 5. Treuille, A., Cooper, S., & Popović, Z. (2006). Continuum Crowds. ACM
-   Transactions on Graphics (TOG), 25(3), 1160–1168. DOI: 10.1145/1141911.1142008.
+   Transactions on Graphics (TOG), 25(3), 1160–1168. DOI: 10.1145/1141911.1142008. Free PDF:
+   <https://grail.cs.washington.edu/projects/crowd-flows/continuum-crowds.pdf>
