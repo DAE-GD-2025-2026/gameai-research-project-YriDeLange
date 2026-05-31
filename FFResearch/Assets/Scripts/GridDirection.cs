@@ -3,12 +3,6 @@ using UnityEngine;
 
 namespace FlowFieldResearch
 {
-    /// <summary>
-    /// Pre-computed neighbour offsets. Keeping these in tables (instead of nested
-    /// if/else over dx/dy) is what lets the integration and flow passes stay short:
-    /// the integration pass walks the 4 cardinals (no diagonal corner-cutting),
-    /// the flow pass picks from all 8.
-    /// </summary>
     public static class GridDirection
     {
         public static readonly IReadOnlyList<Vector2Int> CardinalDirections = new[]

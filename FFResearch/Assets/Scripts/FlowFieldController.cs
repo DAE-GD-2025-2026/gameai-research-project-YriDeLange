@@ -3,11 +3,6 @@ using UnityEngine.InputSystem;
 
 namespace FlowFieldResearch
 {
-    /// <summary>
-    /// Scene-side owner of the <see cref="FlowField"/>. Bakes the grid + cost field
-    /// once on Start, then re-runs only the integration and flow passes whenever the
-    /// goal moves (left-click by default). Agents read it through GetFlowDirection().
-    /// </summary>
     public class FlowFieldController : MonoBehaviour
     {
         [Header("Grid")]
@@ -56,21 +51,18 @@ namespace FlowFieldResearch
             Rebuild(world);
         }
 
-        /// <summary>Re-run the integration + flow passes for a new goal position.</summary>
         public void Rebuild(Vector2 goalWorldPosition)
         {
             if (Field == null) return;
 
             FlowFieldCell destination = Field.GetCellFromWorldPosition(goalWorldPosition);
 
-            // A wall is never a valid goal: ignore the click and keep the current field.
             if (destination.Cost == FlowFieldCell.ImpassableCost) return;
 
             Field.CreateIntegrationField(destination);
             Field.CreateFlowField();
         }
 
-        /// <summary>Flow direction at a world position (zero outside the grid or on a wall).</summary>
         public Vector2 GetFlowDirection(Vector2 worldPosition)
         {
             return Field == null
@@ -84,7 +76,6 @@ namespace FlowFieldResearch
             return Field.GetCellFromWorldPosition(worldPosition) == Field.Destination;
         }
 
-        /// <summary>True if the world position maps to a non-wall cell.</summary>
         public bool IsWalkable(Vector2 worldPosition)
         {
             if (Field == null) return false;

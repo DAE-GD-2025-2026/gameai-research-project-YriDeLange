@@ -102,14 +102,15 @@ A flow field tells an agent which way to go but says nothing about the agents ar
 so FlowFieldAgent adds a local separation behaviour on top. The field gives the overall heading,
 and the separation just nudges each agent away from whoever is closest so the crowd does not pile up.
 Each frame an agent samples the flow vector for its current cell, adds a weighted
-separation push away from nearby agents (weighted by inverse-square distance, so the
-closer the neighbour the harder the push), and steps.
+separation push away from nearby agents (weighted by inverse-distance, so the
+closer the neighbour the harder the push), and steps. It clamps the steering to maxSpeed,
+it uses frame-rate-independent exponential smoothing, and it does wall-slide fallback when a separation would shove an agent into a wall.
 
 ---
 
 ## Result
 
-The screenshot above is a 20×20 field with the goal in the top-right corner, an impassable
+The screenshot above is a 20×20 field with the goal in almost the centre, an impassable
 wall (red), and a rough-terrain patch (orange). You can read the algorithm's correctness
 directly off it:
 

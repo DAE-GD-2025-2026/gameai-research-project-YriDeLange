@@ -3,16 +3,6 @@ using UnityEngine.Rendering;
 
 namespace FlowFieldResearch
 {
-    /// <summary>
-    /// Runtime overlay for the flow field (grid, walls, arrows), drawn with GL lines.
-    ///
-    /// IMPORTANT: this draws from URP's <see cref="RenderPipelineManager.endCameraRendering"/>
-    /// event rather than OnRenderObject. Under URP the legacy OnRenderObject callback
-    /// renders to the Scene view but NOT the Game camera, which is why GL overlays appear
-    /// to "only work in the Scene view". Drawing per-camera here fixes the Game view.
-    ///
-    /// Use this OR the gizmo view, not both.
-    /// </summary>
     [RequireComponent(typeof(FlowFieldController))]
     public class FlowFieldRuntimeView : MonoBehaviour
     {
@@ -39,7 +29,6 @@ namespace FlowFieldResearch
                 Destroy(_lineMaterial);
         }
 
-        // Fires once per camera URP renders (Game view, Scene view, etc.).
         private void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             if (_controller == null) _controller = GetComponent<FlowFieldController>();
@@ -51,7 +40,6 @@ namespace FlowFieldResearch
             _lineMaterial.SetPass(0);
 
             GL.PushMatrix();
-            // Set the GL pipeline to this camera so world-space vertices land correctly.
             GL.modelview = camera.worldToCameraMatrix;
             GL.LoadProjectionMatrix(camera.projectionMatrix);
 
@@ -111,8 +99,8 @@ namespace FlowFieldResearch
         private void DrawFlow(FlowField field)
         {
             float d = field.CellDiameter;
-            float shaft = d * 0.4f;   // length of the arrow body
-            float head = d * 0.18f;   // length of each arrowhead barb
+            float shaft = d * 0.4f;
+            float head = d * 0.18f;
 
             GL.Begin(GL.LINES);
             GL.Color(flowColor);
@@ -125,11 +113,9 @@ namespace FlowFieldResearch
                 Vector2 start = cell.WorldPosition;
                 Vector2 tip = start + dir * shaft;
 
-                // shaft
                 GL.Vertex3(start.x, start.y, 0f);
                 GL.Vertex3(tip.x, tip.y, 0f);
 
-                // two barbs angled back from the tip
                 Vector2 back = -dir;
                 Vector2 perp = new Vector2(-dir.y, dir.x);
                 Vector2 barbA = tip + (back + perp).normalized * head;
@@ -144,7 +130,6 @@ namespace FlowFieldResearch
             GL.End();
         }
 
-        // Built-in shader meant for GL drawing: alpha blend, no cull, always on top.
         private void EnsureMaterial()
         {
             if (_lineMaterial != null) return;
